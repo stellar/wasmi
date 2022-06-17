@@ -152,6 +152,21 @@ pub trait Externals {
         index: usize,
         args: RuntimeArgs,
     ) -> Result<Option<RuntimeValue>, Trap>;
+
+    /// The maximum number of instructions to run between calls to charge_cpu.
+    fn max_insn_step(&self) -> u64 {
+        256
+    }
+
+    /// Charge the externals for a given block of instructions having executed.
+    fn charge_cpu(&mut self, _insns: u64) -> Result<(), TrapCode> {
+        Ok(())
+    }
+
+    /// Charge the externals for a given amount of linear memory being allocated.
+    fn charge_mem(&mut self, _bytes: u64) -> Result<(), TrapCode> {
+        Ok(())
+    }
 }
 
 /// Implementation of [`Externals`] that just traps on [`invoke_index`].
