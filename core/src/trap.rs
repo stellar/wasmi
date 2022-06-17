@@ -148,6 +148,12 @@ pub enum TrapCode {
     /// with an index that points to a function with signature different of what is
     /// expected by this indirect call, this trap is raised.
     UnexpectedSignature,
+
+    /// Attempt to grow memory past the limit imposed by the host.
+    MemLimitExceeded,
+
+    /// Attempt to execute instructions past the limit imposed by the host.
+    CpuLimitExceeded,
 }
 
 impl TrapCode {
@@ -168,6 +174,8 @@ impl TrapCode {
             TrapCode::InvalidConversionToInt => "invalid conversion to integer",
             TrapCode::StackOverflow => "call stack exhausted",
             TrapCode::UnexpectedSignature => "indirect call type mismatch",
+            TrapCode::MemLimitExceeded => "memory limit exceeded",
+            TrapCode::CpuLimitExceeded => "cpu limit exceeded"
         }
     }
 }

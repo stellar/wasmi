@@ -23,6 +23,7 @@ use crate::{
     Trap,
     TrapCode,
     ValueType,
+    LINEAR_MEMORY_PAGE_SIZE,
 };
 use alloc::{boxed::Box, vec::Vec};
 use core::{fmt, ops, u32, usize};
@@ -287,7 +288,7 @@ impl Interpreter {
             }
 
             let function_return = self
-                .do_run_function(&mut function_context, &function_body.code)
+                .do_run_function(&mut function_context, &function_body.code, externals)
                 .map_err(Trap::from)?;
 
             match function_return {
@@ -353,12 +354,15 @@ impl Interpreter {
         }
     }
 
-    fn do_run_function(
+    fn do_run_function<'e, E: Externals + 'e>(
         &mut self,
         function_context: &mut FunctionContext,
         instructions: &isa::Instructions,
+        externals: &'e mut E,
     ) -> Result<RunResult, TrapCode> {
         let mut iter = instructions.iterate_from(function_context.position);
+        let mut insns: u64 = 0;
+        let max_insn: u64 = externals.max_insn_step();
 
         loop {
             let instruction = iter.next().expect(
@@ -367,13 +371,22 @@ impl Interpreter {
                  return or an implicit block `end`.",
             );
 
-            match self.run_instruction(function_context, &instruction)? {
+            insns += 1;
+            if insns >= max_insn {
+                externals.charge_cpu(insns)?;
+                insns = 0;
+            }
+
+            match self.run_instruction(function_context, &instruction, externals)? {
                 InstructionOutcome::RunNextInstruction => {}
                 InstructionOutcome::Branch(target) => {
+                    externals.charge_cpu(insns)?;
+                    insns = 0;
                     iter = instructions.iterate_from(target.dst_pc);
                     self.value_stack.drop_keep(target.drop_keep);
                 }
                 InstructionOutcome::ExecuteCall(func_ref) => {
+                    externals.charge_cpu(insns)?;
                     function_context.position = iter.position();
                     return Ok(RunResult::NestedCall(func_ref));
                 }
@@ -383,15 +396,16 @@ impl Interpreter {
                 }
             }
         }
-
+        externals.charge_cpu(insns)?;
         Ok(RunResult::Return)
     }
 
     #[inline(always)]
-    fn run_instruction(
+    fn run_instruction<'e, E: Externals + 'e>(
         &mut self,
         context: &mut FunctionContext,
         instruction: &isa::Instruction,
+        externals: &'e mut E,
     ) -> Result<InstructionOutcome, TrapCode> {
         match instruction {
             isa::Instruction::Unreachable => self.run_unreachable(context),
@@ -466,7 +480,7 @@ impl Interpreter {
             }
 
             isa::Instruction::CurrentMemory => self.run_current_memory(context),
-            isa::Instruction::GrowMemory => self.run_grow_memory(context),
+            isa::Instruction::GrowMemory => self.run_grow_memory(context, externals),
 
             isa::Instruction::I32Const(val) => self.run_const((*val).into()),
             isa::Instruction::I64Const(val) => self.run_const((*val).into()),
@@ -858,11 +872,14 @@ impl Interpreter {
         Ok(InstructionOutcome::RunNextInstruction)
     }
 
-    fn run_grow_memory(
+    fn run_grow_memory<'e, E: Externals + 'e>(
         &mut self,
         context: &mut FunctionContext,
+        externals: &'e mut E,
     ) -> Result<InstructionOutcome, TrapCode> {
         let pages: u32 = self.value_stack.pop_as();
+        let bytes = pages as u64 * LINEAR_MEMORY_PAGE_SIZE.0 as u64;
+        externals.charge_mem(bytes)?;
         let m = context
             .memory()
             .expect("Due to validation memory should exists");
