@@ -139,6 +139,6 @@ pub use self::{
         ModuleExportsIter,
         Read,
     },
-    store::{AsContext, AsContextMut, Store, StoreContext, StoreContextMut},
+    store::{AsContext, AsContextMut, StepMeter, Store, StoreContext, StoreContextMut},
     table::{Table, TableType},
 };

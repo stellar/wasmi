@@ -28,6 +28,39 @@ pub struct FunctionExecutor<'engine, 'func> {
     insts: Instructions<'engine>,
 }
 
+struct BufferedStepMeter {
+    step_meter: std::rc::Rc<dyn crate::store::StepMeter>,
+    insns: u64,
+    max_insn: u64,
+}
+
+impl BufferedStepMeter {
+    fn new(step_meter: std::rc::Rc<dyn crate::store::StepMeter>) -> Self {
+        let insns = 0;
+        let max_insn = step_meter.max_insn_step();
+        Self {
+            step_meter,
+            insns,
+            max_insn,
+        }
+    }
+    #[inline(always)]
+    fn bump(&mut self) -> Result<(), Trap> {
+        self.insns += 1;
+        if self.insns >= self.max_insn {
+            self.flush()
+        } else {
+            Ok(())
+        }
+    }
+    #[inline(always)]
+    fn flush(&mut self) -> Result<(), Trap> {
+        let tmp = self.insns;
+        self.insns = 0;
+        self.step_meter.charge_cpu(tmp).map_err(|tc| tc.into())
+    }
+}
+
 impl<'engine, 'func> FunctionExecutor<'engine, 'func> {
     /// Creates an execution context for the given [`FuncFrame`].
     #[inline(always)]
@@ -54,6 +87,7 @@ impl<'engine, 'func> FunctionExecutor<'engine, 'func> {
     pub fn execute_frame(self, mut ctx: impl AsContextMut, cache: &mut InstanceCache) -> Result<CallOutcome, Trap> {
         use Instruction as Instr;
         cache.update_instance(self.frame.instance());
+        let mut step_meter = BufferedStepMeter::new(ctx.as_context_mut().store.get_step_meter());
         let mut exec_ctx = ExecutionContext::new(self.value_stack, self.frame, cache, &mut ctx, self.frame.pc());
         loop {
             // # Safety
@@ -62,30 +96,36 @@ impl<'engine, 'func> FunctionExecutor<'engine, 'func> {
             let instr = unsafe {
                 self.insts.get_release_unchecked(exec_ctx.pc)
             };
+            step_meter.bump()?;
             match instr {
                 Instr::GetLocal { local_depth } => { exec_ctx.visit_get_local(*local_depth)?; }
                 Instr::SetLocal { local_depth } => { exec_ctx.visit_set_local(*local_depth)?; }
                 Instr::TeeLocal { local_depth } => { exec_ctx.visit_tee_local(*local_depth)?; }
-                Instr::Br(target) => { exec_ctx.visit_br(*target)?; }
-                Instr::BrIfEqz(target) => { exec_ctx.visit_br_if_eqz(*target)?; }
-                Instr::BrIfNez(target) => { exec_ctx.visit_br_if_nez(*target)?; }
+                Instr::Br(target) => { step_meter.flush()?; exec_ctx.visit_br(*target)?; }
+                Instr::BrIfEqz(target) => { step_meter.flush()?; exec_ctx.visit_br_if_eqz(*target)?; }
+                Instr::BrIfNez(target) => { step_meter.flush()?; exec_ctx.visit_br_if_nez(*target)?; }
                 Instr::ReturnIfNez(drop_keep)  => {
+                    step_meter.flush()?;
                     if let MaybeReturn::Return = exec_ctx.visit_return_if_nez(*drop_keep)? {
                         return Ok(CallOutcome::Return)
                     }
                 }
                 Instr::BrTable { len_targets } => {
+                    step_meter.flush()?;
                     exec_ctx.visit_br_table(*len_targets)?;
                 }
-                Instr::Unreachable => { exec_ctx.visit_unreachable()?; }
+                Instr::Unreachable => { step_meter.flush()?; exec_ctx.visit_unreachable()?; }
                 Instr::Return(drop_keep)  => {
+                    step_meter.flush()?;
                     exec_ctx.visit_ret(*drop_keep)?;
                     return Ok(CallOutcome::Return)
                 }
                 Instr::Call(func) => {
+                    step_meter.flush()?;
                     return exec_ctx.visit_call(*func)
                 }
                 Instr::CallIndirect(signature)  => {
+                    step_meter.flush()?;
                     return exec_ctx.visit_call_indirect(*signature)
                 }
                 Instr::Drop => { exec_ctx.visit_drop()?; }

@@ -22,6 +22,27 @@ use super::{
 use crate::{GuardedEntity, Index};
 use core::sync::atomic::{AtomicU32, Ordering};
 
+pub trait StepMeter: core::fmt::Debug {
+    /// The maximum number of instructions to run between calls to charge_cpu.
+    fn max_insn_step(&self) -> u64 {
+        256
+    }
+
+    /// Charge the externals for a given block of instructions having executed.
+    fn charge_cpu(&self, _insns: u64) -> Result<(), crate::core::TrapCode> {
+        Ok(())
+    }
+
+    /// Charge the externals for a given amount of linear memory being allocated.
+    fn charge_mem(&self, _bytes: u64) -> Result<(), crate::core::TrapCode> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+struct NullStepMeter;
+impl StepMeter for NullStepMeter {}
+
 /// A unique store index.
 ///
 /// # Note
@@ -79,6 +100,8 @@ pub struct Store<T> {
     engine: Engine,
     /// User provided state.
     user_state: T,
+    /// Measures execution costs and traps when over budget.
+    step_meter: std::rc::Rc<dyn StepMeter>,
 }
 
 impl<T> Store<T> {
@@ -93,6 +116,7 @@ impl<T> Store<T> {
             instances: Arena::new(),
             engine: engine.clone(),
             user_state,
+            step_meter: std::rc::Rc::new(NullStepMeter),
         }
     }
 
@@ -114,6 +138,16 @@ impl<T> Store<T> {
     /// Consumes `self` and returns its user provided state.
     pub fn into_state(self) -> T {
         self.user_state
+    }
+
+    /// Returns the current [`StepMeter`].
+    pub fn get_step_meter(&self) -> std::rc::Rc<dyn StepMeter> {
+        self.step_meter.clone()
+    }
+
+    /// Installs a new [`StepMeter`].
+    pub fn set_step_meter(&mut self, step_meter: std::rc::Rc<dyn StepMeter>) {
+        self.step_meter = step_meter
     }
 
     /// Allocates a new function type to the store.
