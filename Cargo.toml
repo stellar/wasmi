@@ -24,7 +24,7 @@ criterion = "0.3.5"
 
 # Required as dev-dependency because otherwise benchmarks
 # have trouble using it without `cargo bench --all-features`.
-wasmi_v1 = { version = "0.11", path = "wasmi_v1" }
+# wasmi_v1 = { version = "0.11", path = "wasmi_v1" }
 
 [features]
 default = ["std"]
@@ -50,10 +50,10 @@ reduced-stack-buffer = [ "parity-wasm/reduced-stack-buffer" ]
 members = ["validation", "core", "wasmi_v1"]
 exclude = []
 
-[[bench]]
-name = "benches"
-harness = false
+#[[bench]]
+#name = "benches"
+#harness = false
 
-[profile.bench]
-lto = "fat"
-codegen-units = 1
+#[profile.bench]
+#lto = "fat"
+#codegen-units = 1
