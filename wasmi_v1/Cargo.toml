@@ -9,10 +9,11 @@ repository = "https://github.com/paritytech/wasmi"
 documentation = "https://paritytech.github.io/wasmi/"
 description = "WebAssembly interpreter"
 keywords = ["wasm", "webassembly", "bytecode", "interpreter"]
+publish = false
 
 [dependencies]
 wasmparser = { version = "0.83", package = "wasmparser-nostd", default-features = false }
-wasmi_core = { version = "0.1", path = "../core", default-features = false }
+wasmi_core = { package = "soroban-wasmi_core", version = "0.1", path = "../core", default-features = false }
 spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
 
 [dev-dependencies]
