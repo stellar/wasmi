@@ -13,6 +13,7 @@ use downcast_rs::{impl_downcast, DowncastSync};
 /// # Examples
 ///
 /// ```rust
+/// use soroban_wasmi_core as wasmi_core;
 /// use std::fmt;
 /// use wasmi_core::{Trap, HostError};
 ///

@@ -1,5 +1,6 @@
 use super::{TestDescriptor, TestError, TestProfile, TestSpan};
 use anyhow::Result;
+use soroban_wasmi as wasmi;
 use std::collections::HashMap;
 use wasmi::{
     Config,

@@ -1,3 +1,4 @@
+use soroban_wasmi as wasmi;
 mod bench;
 
 use self::bench::{

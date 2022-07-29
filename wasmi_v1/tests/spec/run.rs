@@ -1,5 +1,6 @@
 use super::{error::TestError, TestContext, TestDescriptor};
 use anyhow::Result;
+use soroban_wasmi as wasmi;
 use wasmi::{Config, Error as WasmiError};
 use wasmi_core::{Value, F32, F64};
 use wast::{

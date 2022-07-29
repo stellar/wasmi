@@ -1,3 +1,4 @@
+use soroban_wasmi as wasmi;
 use std::{fs::File, io::Read as _};
 
 use wasmi::{Config, StackLimits};

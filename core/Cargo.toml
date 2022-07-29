@@ -1,14 +1,12 @@
 [package]
-name = "wasmi_core"
-version = "0.3.0"
+name = "soroban-wasmi_core"
+version = "0.2.0"
 edition = "2021"
-authors = ["Parity Technologies <admin@parity.io>"]
+authors = ["Stellar Development Foundation <info@stellar.org>"]
 license = "MIT/Apache-2.0"
 readme = "../README.md"
-repository = "https://github.com/paritytech/wasmi"
-documentation = "https://docs.rs/wasmi_core"
-description = "Core abstractions and primitives for the wasmi WebAssembly interpreter"
-keywords = ["wasm", "webassembly", "bytecode", "interpreter"]
+repository = "https://github.com/stellar/wasmi"
+description = "Soroban fork of Parity WebAssembly interpreter"
 
 [dependencies]
 memory_units = "0.4.0"
