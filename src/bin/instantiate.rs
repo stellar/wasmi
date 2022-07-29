@@ -1,7 +1,7 @@
 //! Handy utility to test whether the given module deserializes,
 //! validates and instantiates successfully.
 
-extern crate wasmi;
+extern crate soroban_wasmi as wasmi;
 
 use std::{env::args, fs::File};
 use wasmi::{
