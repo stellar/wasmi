@@ -13,3 +13,4 @@ jobs:
     uses: stellar/actions/.github/workflows/rust-bump-version.yml@main
     with:
       version: ${{ inputs.version }}
+      base: soroban-wasmi-v0.16
