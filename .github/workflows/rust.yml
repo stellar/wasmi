@@ -39,6 +39,7 @@ jobs:
     - run: rustup update
     - run: rustup target add ${{ matrix.sys.target }}
     - run: cargo install --target-dir ~/.cargo/target --locked --version 0.5.16 cargo-hack
+    - run: git submodule update --init --recursive
     - run: cargo hack build --target ${{ matrix.sys.target }}
     - run: cargo hack test --target ${{ matrix.sys.target }}
 
