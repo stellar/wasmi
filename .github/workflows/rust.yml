@@ -1,182 +1,58 @@
-name: Rust - Continuous Integration
+name: Rust
 
 on:
   push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
+
+env:
+  RUSTFLAGS: -D warnings
 
 jobs:
-  check:
-    name: Build
+
+  complete:
+    if: always()
+    needs: [rust-analyzer-compat, build-and-test, publish-dry-run]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-      - name: Add extra targets
-        # Workaround for https://github.com/actions-rs/toolchain/issues/165
-        run: |
-          rustup target add thumbv7em-none-eabi
-      - name: Build (default features)
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace
-      - name: Build (all features)
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace --all-features
-      - name: Build wasmi itself as no_std
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace --lib --no-default-features --target thumbv7em-none-eabi --exclude wasmi_cli
-      - name: Build (wasm32)
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --workspace --no-default-features --target wasm32-unknown-unknown
+    - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      run: exit 1
 
-  test:
-    name: Test
+  rust-analyzer-compat:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: rustup update
+    - run: rustup +nightly component add rust-analyzer
+    - name: Check if rust-analyzer encounters any errors parsing project
+      run: rustup run nightly rust-analyzer analysis-stats . 2>&1 | (! grep ERROR)
+
+  build-and-test:
     strategy:
       matrix:
-        # windows-latest was pinned to windows-2019
-        # because of https://github.com/paritytech/wasmi/runs/5021520759
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+        sys:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+    runs-on: ${{ matrix.sys.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - name: Checkout Submodules
-        run: git submodule update --init --recursive
-      - name: Test (default features)
-        uses: actions-rs/cargo@v1
-        env:
-          RUSTFLAGS: '--cfg debug_assertions'
-        with:
-          command: test
-          args: --workspace --release
-      - name: Test (all features)
-        uses: actions-rs/cargo@v1
-        env:
-          RUSTFLAGS: '--cfg debug_assertions'
-        with:
-          command: test
-          args: --workspace --release --all-features
+    - uses: actions/checkout@v3
+    - uses: stellar/actions/rust-cache@main
+    - run: rustup update
+    - run: rustup target add ${{ matrix.sys.target }}
+    - run: cargo install --target-dir ~/.cargo/target --locked --version 0.5.16 cargo-hack
+    - run: git submodule update --init --recursive
+    - run: cargo hack build --target ${{ matrix.sys.target }}
+    - run: cargo hack test --target ${{ matrix.sys.target }}
 
-  fmt:
-    name: Formatting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
-  doc:
-    name: Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rust-docs, rust-src
-      - uses: actions-rs/cargo@v1
-        env:
-          RUSTDOCFLAGS: '-D warnings'
-        with:
-          command: doc
-          args: --workspace --all-features --no-deps --document-private-items
-
-  audit:
-    name: Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: audit
-          args: ''
-
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: clippy
-      - name: Clippy (default features)
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --workspace -- -D warnings
-      - name: Clippy (all features)
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --workspace --all-features -- -D warnings
-      - name: Clippy (no_std)
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --workspace --no-default-features -- -D warnings
-
-  coverage:
-    name: Coverage
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - name: Checkout Submodules
-        run: git submodule update --init --recursive
-      - name: Run cargo-tarpaulin (default features)
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.18.0'
-          args: --workspace
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1.0.2
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v1
-        with:
-          name: code-coverage-report
-          path: cobertura.xml
+  publish-dry-run:
+    if: startsWith(github.head_ref, 'release/')
+    strategy:
+      matrix:
+        sys:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+          cargo-hack-feature-options: ''
+    uses: stellar/actions/.github/workflows/rust-publish-dry-run.yml@main
+    with:
+      runs-on: ${{ matrix.sys.os }}
+      cargo-hack-feature-options: ${{ matrix.sys.cargo-hack-feature-options }}
+      cargo-package-options: --target ${{ matrix.sys.target }}
