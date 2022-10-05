@@ -1,6 +1,6 @@
 [package]
 name = "soroban-wasmi"
-version = "0.16.0"
+version = "0.16.0-soroban0"
 edition = "2021"
 authors = ["Stellar Development Foundation <info@stellar.org>"]
 license = "MIT/Apache-2.0"
@@ -11,7 +11,7 @@ exclude = [ "tests/*", "benches/*" ]
 
 [dependencies]
 wasmparser = { version = "0.90", package = "wasmparser-nostd", default-features = false }
-wasmi_core = { package = "soroban-wasmi_core", version = "0.2.0", path = "../core", default-features = false }
+wasmi_core = { package = "soroban-wasmi_core", version = "0.16.0-soroban0", path = "../core", default-features = false }
 spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
 
 [dev-dependencies]
