@@ -1,6 +1,6 @@
 [package]
 name = "soroban-wasmi"
-version = "0.16.0-soroban0"
+version = "0.16.0-soroban1"
 edition = "2021"
 authors = ["Stellar Development Foundation <info@stellar.org>"]
 license = "MIT/Apache-2.0"
