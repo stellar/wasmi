@@ -32,4 +32,5 @@ std = [
 
 [[bench]]
 name = "benches"
+path = "benches/benches.rs"
 harness = false
