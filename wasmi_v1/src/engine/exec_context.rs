@@ -15,7 +15,7 @@ use crate::{
     Func,
 };
 use core::cmp;
-use wasmi_core::{memory_units::Pages, ExtendInto, LittleEndianConvert, UntypedValue, WrapInto};
+use wasmi_core::{memory_units::{Pages, ByteSize}, ExtendInto, LittleEndianConvert, UntypedValue, WrapInto};
 
 /// State that is used during Wasm function execution.
 #[derive(Debug)]
@@ -156,7 +156,7 @@ impl<'engine, 'func> FunctionExecutor<'engine, 'func> {
                 Instr::I64Store16(offset)  => { exec_ctx.visit_i64_store_16(*offset)?; }
                 Instr::I64Store32(offset)  => { exec_ctx.visit_i64_store_32(*offset)?; }
                 Instr::CurrentMemory => { exec_ctx.visit_current_memory()?; }
-                Instr::GrowMemory => { exec_ctx.visit_grow_memory()?; }
+                Instr::GrowMemory => { exec_ctx.visit_grow_memory(&step_meter)?; }
                 Instr::Const(bytes)  => { exec_ctx.visit_const(*bytes)?; }
                 Instr::I32Eqz => { exec_ctx.visit_i32_eqz()?; }
                 Instr::I32Eq => { exec_ctx.visit_i32_eq()?; }
@@ -723,9 +723,11 @@ where
         self.next_instr()
     }
 
-    fn visit_grow_memory(&mut self) -> Result<(), Trap> {
+    fn visit_grow_memory(&mut self, meter: &BufferedStepMeter) -> Result<(), Trap> {
         let pages: u32 = self.value_stack.pop_as();
         let memory = self.default_memory();
+        let bytes = pages as u64 * Pages::BYTE_SIZE.0 as u64;
+        meter.step_meter.charge_mem(bytes)?;
         let new_size = match memory.grow(self.ctx.as_context_mut(), Pages(pages as usize)) {
             Ok(Pages(old_size)) => old_size as u32,
             Err(_) => {
