@@ -55,4 +55,4 @@ jobs:
     with:
       runs-on: ${{ matrix.sys.os }}
       cargo-hack-feature-options: ${{ matrix.sys.cargo-hack-feature-options }}
-      cargo-package-options: --target ${{ matrix.sys.target }}
+      target: ${{ matrix.sys.target }}
