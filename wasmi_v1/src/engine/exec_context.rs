@@ -101,17 +101,16 @@ impl<'engine, 'func> FunctionExecutor<'engine, 'func> {
                 Instr::GetLocal { local_depth } => { exec_ctx.visit_get_local(*local_depth)?; }
                 Instr::SetLocal { local_depth } => { exec_ctx.visit_set_local(*local_depth)?; }
                 Instr::TeeLocal { local_depth } => { exec_ctx.visit_tee_local(*local_depth)?; }
-                Instr::Br(target) => { step_meter.flush()?; exec_ctx.visit_br(*target)?; }
-                Instr::BrIfEqz(target) => { step_meter.flush()?; exec_ctx.visit_br_if_eqz(*target)?; }
-                Instr::BrIfNez(target) => { step_meter.flush()?; exec_ctx.visit_br_if_nez(*target)?; }
+                Instr::Br(target) => { exec_ctx.visit_br(*target)?; }
+                Instr::BrIfEqz(target) => { exec_ctx.visit_br_if_eqz(*target)?; }
+                Instr::BrIfNez(target) => { exec_ctx.visit_br_if_nez(*target)?; }
                 Instr::ReturnIfNez(drop_keep)  => {
-                    step_meter.flush()?;
                     if let MaybeReturn::Return = exec_ctx.visit_return_if_nez(*drop_keep)? {
+                        step_meter.flush()?;
                         return Ok(CallOutcome::Return)
                     }
                 }
                 Instr::BrTable { len_targets } => {
-                    step_meter.flush()?;
                     exec_ctx.visit_br_table(*len_targets)?;
                 }
                 Instr::Unreachable => { step_meter.flush()?; exec_ctx.visit_unreachable()?; }
