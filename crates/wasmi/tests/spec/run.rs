@@ -1,3 +1,4 @@
+use soroban_wasmi as wasmi;
 use super::{error::TestError, TestContext, TestDescriptor};
 use anyhow::Result;
 use wasmi::{Config, ExternRef, FuncRef, Instance, Value};
