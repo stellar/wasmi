@@ -390,6 +390,11 @@ impl Config {
         self
     }
 
+    pub fn set_fuel_costs(&mut self, costs: FuelCosts) -> &mut Self {
+        self.fuel_costs = costs;
+        self
+    }
+
     /// Returns the [`FuelConsumptionMode`] for the [`Engine`].
     ///
     /// Returns `None` if fuel metering is disabled for the [`Engine`].
