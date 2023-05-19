@@ -174,7 +174,7 @@ pub struct Fuel {
     /// The remaining fuel.
     remaining: u64,
     /// The total amount of fuel so far.
-    total: u64,
+    pub(crate) total: u64,
 }
 
 impl Fuel {
@@ -218,6 +218,12 @@ impl Fuel {
             .checked_sub(delta)
             .ok_or(TrapCode::OutOfFuel)?;
         Ok(self.remaining)
+    }
+
+    /// Reset the total and remaining fuel amounts to 0.
+    pub fn reset_fuel(&mut self) {
+        self.remaining = 0;
+        self.total = 0;
     }
 }
 
@@ -752,6 +758,14 @@ impl<T> Store<T> {
         Some(self.inner.fuel.fuel_consumed())
     }
 
+    /// Returns the amount of total [`Fuel`] supplied to the [`Store`].
+    ///
+    /// Returns `None` if fuel metering is disabled.
+    pub fn fuel_total(&self) -> Option<u64> {
+        self.check_fuel_metering_enabled().ok()?;
+        Some(self.inner.fuel.total)
+    }
+
     /// Synthetically consumes an amount of fuel for the [`Store`].
     ///
     /// Returns the remaining amount of fuel after this operation.
@@ -770,6 +784,16 @@ impl<T> Store<T> {
             .fuel
             .consume_fuel(delta)
             .map_err(|_error| FuelError::out_of_fuel())
+    }
+
+    /// Resets the total and consumed amounts of fuel to 0 for the [`Store`].
+    ///
+    /// # Errors
+    ///
+    /// - If fuel metering is disabled.
+    pub fn reset_fuel(&mut self) -> Result<(), FuelError> {
+        self.check_fuel_metering_enabled()?;
+        Ok(self.inner.fuel.reset_fuel())
     }
 
     /// Allocates a new [`TrampolineEntity`] and returns a [`Trampoline`] reference to it.
