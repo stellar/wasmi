@@ -2,6 +2,7 @@ use super::{
     export::ExternIdx,
     import::FuncTypeIdx,
     ConstExpr,
+    CustomSection,
     DataSegment,
     ElementSegment,
     ExternTypeIdx,
@@ -39,6 +40,7 @@ pub struct ModuleBuilder<'engine> {
     pub compiled_funcs: Vec<CompiledFunc>,
     pub element_segments: Vec<ElementSegment>,
     pub data_segments: Vec<DataSegment>,
+    pub(super) custom_sections: Vec<CustomSection>,
 }
 
 /// The import names of the [`Module`] imports.
@@ -139,6 +141,7 @@ impl<'engine> ModuleBuilder<'engine> {
             compiled_funcs: Vec::new(),
             element_segments: Vec::new(),
             data_segments: Vec::new(),
+            custom_sections: Vec::new(),
         }
     }
 
@@ -388,6 +391,12 @@ impl<'engine> ModuleBuilder<'engine> {
         );
         self.data_segments = data.into_iter().collect::<Result<Vec<_>, _>>()?;
         Ok(())
+    }
+
+    pub fn push_custom_section(&mut self, name: &str, data: &[u8]) {
+        let name: Box<str> = name.into();
+        let data: Box<[u8]> = data.into();
+        self.custom_sections.push(CustomSection { name, data })
     }
 
     /// Finishes construction of the WebAssembly [`Module`].

@@ -49,6 +49,12 @@ use crate::{
 use alloc::{boxed::Box, collections::BTreeMap, sync::Arc};
 use core::{iter, slice::Iter as SliceIter};
 
+#[derive(Debug)]
+pub struct CustomSection {
+    pub name: Box<str>,
+    pub data: Box<[u8]>,
+}
+
 /// A parsed and validated WebAssembly module.
 #[derive(Debug)]
 pub struct Module {
@@ -65,6 +71,7 @@ pub struct Module {
     compiled_funcs: Box<[CompiledFunc]>,
     element_segments: Box<[ElementSegment]>,
     data_segments: Box<[DataSegment]>,
+    custom_sections: Box<[CustomSection]>,
 }
 
 /// The index of the default Wasm linear memory.
@@ -168,6 +175,7 @@ impl Module {
             compiled_funcs: builder.compiled_funcs.into(),
             element_segments: builder.element_segments.into(),
             data_segments: builder.data_segments.into(),
+            custom_sections: builder.custom_sections.into(),
         }
     }
 
@@ -263,6 +271,10 @@ impl Module {
     /// Returns an iterator over the exports of the [`Module`].
     pub fn exports(&self) -> ModuleExportsIter {
         ModuleExportsIter::new(self)
+    }
+
+    pub fn custom_sections(&self) -> &[CustomSection] {
+        &self.custom_sections
     }
 
     /// Looks up an export in this [`Module`] by its `name`.
