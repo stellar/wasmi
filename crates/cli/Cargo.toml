@@ -10,12 +10,13 @@ readme.workspace = true
 license.workspace = true
 keywords.workspace = true
 categories.workspace = true
+publish = false
 
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
-wasmi = { version = "0.31.0", path = "../wasmi" }
-wasmi_wasi = { version = "0.31.0", path = "../wasi" }
+wasmi = { version = "0.31.0", git = "https://github.com/paritytech/wasmi.git" }
+wasmi_wasi = { version = "0.31.0", git = "https://github.com/paritytech/wasmi.git" }
 wat = "1"
 
 [dev-dependencies]
