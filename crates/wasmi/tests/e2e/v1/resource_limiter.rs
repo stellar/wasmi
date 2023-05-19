@@ -1,4 +1,5 @@
 //! Tests to check if wasmi's ResourceLimiter works as intended.
+use soroban_wasmi as wasmi;
 use wasmi::{
     Config,
     Engine,

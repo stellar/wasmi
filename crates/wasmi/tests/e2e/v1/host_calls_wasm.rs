@@ -1,6 +1,7 @@
 //! Test to assert that host functions that call back into
 //! Wasm works correctly.
 
+use soroban_wasmi as wasmi;
 use wasmi::{Caller, Engine, Extern, Func, Linker, Module, Store};
 
 fn test_setup() -> (Store<()>, Linker<()>) {

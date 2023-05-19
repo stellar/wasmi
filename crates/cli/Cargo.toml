@@ -1,6 +1,6 @@
 [package]
 name = "wasmi_cli"
-version = "0.31.1"
+version = "0.31.1-soroban.20.0.0"
 documentation = "https://docs.rs/wasmi/"
 description = "WebAssembly interpreter"
 authors.workspace = true
@@ -10,12 +10,13 @@ readme.workspace = true
 license.workspace = true
 keywords.workspace = true
 categories.workspace = true
+publish = false
 
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
-wasmi = { version = "0.31.1", path = "../wasmi" }
-wasmi_wasi = { version = "0.31.1", path = "../wasi" }
+wasmi = { version = "0.31.1-soroban.20.0.0", path = "../wasmi", package = "soroban-wasmi" }
+wasmi_wasi = { version = "0.31.1-soroban.20.0.0", path = "../wasi" }
 wat = "1"
 
 [dev-dependencies]

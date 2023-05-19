@@ -1,3 +1,4 @@
+use soroban_wasmi as wasmi;
 mod context;
 mod descriptor;
 mod error;
