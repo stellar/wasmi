@@ -1,8 +1,7 @@
 [package]
-name = "wasmi"
-version = "0.30.0"
-documentation = "https://docs.rs/wasmi/"
-description = "WebAssembly interpreter"
+name = "soroban-wasmi"
+version = "0.30.0-soroban"
+description = "Soroban fork of Parity WebAssembly interpreter"
 exclude = ["tests/*", "benches/*"]
 authors.workspace = true
 repository.workspace = true
@@ -14,7 +13,7 @@ categories.workspace = true
 
 [dependencies]
 wasmparser = { version = "0.100.1", package = "wasmparser-nostd", default-features = false }
-wasmi_core = { version = "0.12", path = "../core", default-features = false }
+wasmi_core = { package = "soroban-wasmi_core", version = "0.30.0-soroban", path = "../core", default-features = false }
 wasmi_arena = { version = "0.4", path = "../arena", default-features = false }
 spin = { version = "0.9", default-features = false, features = [
     "mutex",
@@ -36,4 +35,5 @@ std = ["wasmi_core/std", "wasmi_arena/std", "wasmparser/std", "spin/std"]
 
 [[bench]]
 name = "benches"
+path = "benches/benches.rs"
 harness = false
