@@ -85,6 +85,7 @@ impl FuncRef {
     /// # Examples
     ///
     /// ```rust
+    /// # use soroban_wasmi as wasmi;
     /// # use wasmi::{Func, FuncRef, Store, Engine};
     /// # let engine = Engine::default();
     /// # let mut store = <Store<()>>::new(&engine, ());
