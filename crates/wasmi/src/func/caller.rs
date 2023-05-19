@@ -15,7 +15,7 @@ pub struct Caller<'a, T> {
 
 impl<'a, T> Caller<'a, T> {
     /// Creates a new [`Caller`] from the given store context and [`Instance`] handle.
-    pub(crate) fn new<C>(ctx: &'a mut C, instance: Option<&Instance>) -> Self
+    pub fn new<C>(ctx: &'a mut C, instance: Option<&Instance>) -> Self
     where
         C: AsContextMut<UserState = T>,
     {
@@ -69,6 +69,13 @@ impl<'a, T> Caller<'a, T> {
         self.ctx.store.fuel_consumed()
     }
 
+    /// Returns the amount of total [`Fuel`] supplied to the [`Store`](crate::Store).
+    ///
+    /// Returns `None` if fuel metering is disabled.
+    pub fn fuel_total(&self) -> Option<u64> {
+        self.ctx.store.fuel_total()
+    }
+
     /// Synthetically consumes an amount of fuel for the [`Store`](crate::Store).
     ///
     /// Returns the remaining amount of fuel after this operation.
@@ -83,6 +90,15 @@ impl<'a, T> Caller<'a, T> {
     /// - If more fuel is consumed than available.
     pub fn consume_fuel(&mut self, delta: u64) -> Result<u64, FuelError> {
         self.ctx.store.consume_fuel(delta)
+    }
+
+    /// Resets the total and consumed amounts of fuel to 0 for the [`Store`](crate::Store).
+    ///
+    /// # Errors
+    ///
+    /// - If fuel metering is disabled.
+    pub fn reset_fuel(&mut self) -> Result<(), FuelError> {
+        self.ctx.store.reset_fuel()
     }
 }
 
