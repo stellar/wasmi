@@ -26,6 +26,7 @@ use core::{
 };
 use wasmparser::{
     Chunk,
+    CustomSectionReader,
     DataSectionReader,
     ElementSectionReader,
     Encoding,
@@ -178,7 +179,7 @@ impl<'engine> ModuleParser<'engine> {
             Payload::ElementSection(section) => self.process_element(section),
             Payload::DataCountSection { count, range } => self.process_data_count(count, range),
             Payload::DataSection(section) => self.process_data(section),
-            Payload::CustomSection { .. } => Ok(()),
+            Payload::CustomSection(section) => self.process_custom_section(section),
             Payload::CodeSectionStart { count, range, .. } => self.process_code_start(count, range),
             Payload::CodeSectionEntry(func_body) => self.process_code_entry(func_body),
             Payload::UnknownSection { id, range, .. } => self.process_unknown(id, range),
@@ -457,6 +458,12 @@ impl<'engine> ModuleParser<'engine> {
             .into_iter()
             .map(|segment| segment.map(DataSegment::from).map_err(ModuleError::from));
         self.builder.push_data_segments(segments)?;
+        Ok(())
+    }
+
+    fn process_custom_section(&mut self, section: CustomSectionReader) -> Result<(), ModuleError> {
+        self.builder
+            .push_custom_section(section.name(), section.data());
         Ok(())
     }
 
