@@ -1,5 +1,6 @@
 //! Test to assert that resumable call feature works as intended.
 
+use soroban_wasmi as wasmi;
 use core::slice;
 
 use wasmi::{
