@@ -114,6 +114,7 @@ pub struct StoreInner {
     engine: Engine,
     /// The fuel of the [`Store`].
     fuel: Fuel,
+    mem_fuel: Fuel,
 }
 
 #[test]
@@ -242,6 +243,7 @@ impl StoreInner {
             elems: Arena::new(),
             extern_objects: Arena::new(),
             fuel: Fuel::default(),
+            mem_fuel: Fuel::default(),
         }
     }
 
@@ -258,6 +260,10 @@ impl StoreInner {
     /// Returns an exclusive reference to the [`Fuel`] counters.
     pub fn fuel_mut(&mut self) -> &mut Fuel {
         &mut self.fuel
+    }
+
+    pub fn mem_fuel_mut(&mut self) -> &mut Fuel {
+        &mut self.mem_fuel
     }
 
     /// Wraps an entitiy `Idx` (index type) as a [`Stored<Idx>`] type.
@@ -794,6 +800,35 @@ impl<T> Store<T> {
     pub fn reset_fuel(&mut self) -> Result<(), FuelError> {
         self.check_fuel_metering_enabled()?;
         Ok(self.inner.fuel.reset_fuel())
+    }
+
+    pub fn add_mem_fuel(&mut self, delta: u64) -> Result<(), FuelError> {
+        self.check_fuel_metering_enabled()?;
+        self.inner.mem_fuel.add_fuel(delta);
+        Ok(())
+    }
+
+    pub fn mem_fuel_consumed(&self) -> Option<u64> {
+        self.check_fuel_metering_enabled().ok()?;
+        Some(self.inner.mem_fuel.fuel_consumed())
+    }
+
+    pub fn mem_fuel_total(&self) -> Option<u64> {
+        self.check_fuel_metering_enabled().ok()?;
+        Some(self.inner.mem_fuel.total)
+    }
+
+    pub fn consume_mem_fuel(&mut self, delta: u64) -> Result<u64, FuelError> {
+        self.check_fuel_metering_enabled()?;
+        self.inner
+            .mem_fuel
+            .consume_fuel(delta)
+            .map_err(|_error| FuelError::out_of_fuel())
+    }
+
+    pub fn reset_mem_fuel(&mut self) -> Result<(), FuelError> {
+        self.check_fuel_metering_enabled()?;
+        Ok(self.inner.mem_fuel.reset_fuel())
     }
 
     /// Allocates a new [`TrampolineEntity`] and returns a [`Trampoline`] reference to it.
