@@ -733,6 +733,17 @@ impl<'ctx, 'engine> Executor<'ctx, 'engine> {
         }
     }
 
+    /// Consume an amount of memory fuel specified by `delta`.
+    #[inline(always)]
+    fn consume_mem_fuel(&mut self, bytes: u64) -> Result<u64, TrapCode>
+    {
+        if self.ctx.engine().config().get_consume_fuel() {
+            self.ctx.mem_fuel_mut().consume_fuel(bytes)
+        } else {
+            Ok(0)
+        }
+    }
+
     /// Consume an amount of fuel specified by `delta` if `exec` succeeds.
     ///
     /// Prior to executing `exec` it is checked if enough fuel is remaining
@@ -1096,9 +1107,10 @@ impl<'ctx, 'engine> Executor<'ctx, 'engine> {
                 return self.try_next_instr();
             }
         };
+        let delta_in_bytes = delta.to_bytes().unwrap_or(0) as u64;
+        self.consume_mem_fuel(delta_in_bytes)?;
         let result = self.consume_fuel_with(
             |costs| {
-                let delta_in_bytes = delta.to_bytes().unwrap_or(0) as u64;
                 costs.fuel_for_bytes(delta_in_bytes)
             },
             |this| {
