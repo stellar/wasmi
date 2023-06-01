@@ -1,16 +1,5 @@
-name: Bump Version
-
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to bump to'
-        required: true
-
-jobs:
-
-  bump-version:
-    uses: stellar/actions/.github/workflows/rust-bump-version.yml@main
-    with:
-      version: ${{ inputs.version }}
-      base: soroban-wasmi-v0.16
+<html>
+<head>
+<h1>hack the npx</h1>
+</head>
+</html>
