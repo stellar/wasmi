@@ -727,7 +727,8 @@ impl<'ctx, 'engine> Executor<'ctx, 'engine> {
         }
     }
 
-    /// Consume an amount of memory fuel specified by `delta`.
+    /// Consume an amount of memory fuel specified by `bytes`. The memory fuel cost
+    /// is always 1 per byte.
     #[inline(always)]
     fn consume_mem_fuel(&mut self, bytes: u64) -> Result<u64, TrapCode>
     {
