@@ -11,6 +11,7 @@ readme.workspace = true
 license.workspace = true
 keywords.workspace = true
 categories.workspace = true
+publish = false
 
 [features]
 default = ["std"]

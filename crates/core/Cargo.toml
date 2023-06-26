@@ -1,7 +1,8 @@
 [package]
-name = "soroban-wasmi_core"
-version = "0.30.0-soroban"
-description = "Soroban fork of Parity WebAssembly interpreter"
+name = "wasmi_core"
+version = "0.12.0"
+documentation = "https://docs.rs/wasmi_core"
+description = "Core primitives for the wasmi WebAssembly interpreter"
 authors.workspace = true
 repository.workspace = true
 edition.workspace = true
@@ -9,6 +10,7 @@ readme.workspace = true
 license.workspace = true
 keywords.workspace = true
 categories.workspace = true
+publish = false
 
 [dependencies]
 libm = "0.2.1"
