@@ -1,6 +1,6 @@
 [package]
 name = "wasmi_cli"
-version = "0.30.0-soroban"
+version = "0.30.0-soroban0"
 documentation = "https://docs.rs/wasmi/"
 description = "WebAssembly interpreter"
 authors.workspace = true
