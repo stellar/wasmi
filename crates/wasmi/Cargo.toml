@@ -1,6 +1,6 @@
 [package]
 name = "soroban-wasmi"
-version = "0.30.0-soroban"
+version = "0.30.0"
 description = "Soroban fork of Parity WebAssembly interpreter"
 exclude = ["tests/*", "benches/*"]
 authors.workspace = true
@@ -13,8 +13,8 @@ categories.workspace = true
 
 [dependencies]
 wasmparser = { version = "0.100.1", package = "wasmparser-nostd", default-features = false }
-wasmi_core = { version = "0.12", path = "../core", default-features = false }
-wasmi_arena = { version = "0.4", path = "../arena", default-features = false }
+wasmi_core = { version = "0.30", path = "../core", default-features = false }
+wasmi_arena = { version = "0.30", path = "../arena", default-features = false }
 spin = { version = "0.9", default-features = false, features = [
     "mutex",
     "spin_mutex",
