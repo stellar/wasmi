@@ -71,25 +71,23 @@ fn test_module() -> &'static str {
     )"#
 }
 
-fn check_consumption_mode(mode: FuelConsumptionMode, given_fuel: u64, consumed_fuel: u64, given_mem_fuel: u64, consumed_mem_fuel: u64) {
-    assert!(given_fuel >= consumed_fuel && given_mem_fuel >= consumed_mem_fuel);
+fn check_consumption_mode(mode: FuelConsumptionMode, given_fuel: u64, consumed_fuel: u64) {
+    assert!(given_fuel >= consumed_fuel);
     let wasm = wat2wasm(test_module());
     let (mut store, func) = default_test_setup(mode, &wasm);
     let func = func.typed::<(), i32>(&store).unwrap();
     // Now add enough fuel, so execution should succeed.
     store.add_fuel(given_fuel).unwrap(); // this is just enough fuel for a successful `memory.grow`
-    store.add_mem_fuel(given_mem_fuel).unwrap();
     assert_success(func.call(&mut store, ()));
     assert_eq!(store.fuel_consumed(), Some(consumed_fuel));
-    assert_eq!(store.mem_fuel_consumed(), Some(consumed_mem_fuel));
 }
 
 #[test]
 fn lazy_consumption_mode() {
-    check_consumption_mode(FuelConsumptionMode::Lazy, 1030, 4, 65540, 65536);
+    check_consumption_mode(FuelConsumptionMode::Lazy, 1030, 4);
 }
 
 #[test]
 fn eager_consumption_mode() {
-    check_consumption_mode(FuelConsumptionMode::Eager, 1030, 1028, 65540, 65536);
+    check_consumption_mode(FuelConsumptionMode::Eager, 1030, 1028);
 }

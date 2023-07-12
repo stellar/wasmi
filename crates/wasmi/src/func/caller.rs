@@ -100,26 +100,6 @@ impl<'a, T> Caller<'a, T> {
     pub fn reset_fuel(&mut self) -> Result<(), FuelError> {
         self.ctx.store.reset_fuel()
     }
-
-    pub fn add_mem_fuel(&mut self, delta: u64) -> Result<(), FuelError> {
-        self.ctx.store.add_mem_fuel(delta)
-    }
-
-    pub fn mem_fuel_consumed(&self) -> Option<u64> {
-        self.ctx.store.mem_fuel_consumed()
-    }
-
-    pub fn mem_fuel_total(&self) -> Option<u64> {
-        self.ctx.store.mem_fuel_total()
-    }
-
-    pub fn consume_mem_fuel(&mut self, delta: u64) -> Result<u64, FuelError> {
-        self.ctx.store.consume_mem_fuel(delta)
-    }
-
-    pub fn reset_mem_fuel(&mut self) -> Result<(), FuelError> {
-        self.ctx.store.reset_mem_fuel()
-    }
 }
 
 impl<T> AsContext for Caller<'_, T> {
