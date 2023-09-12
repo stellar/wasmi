@@ -1,6 +1,6 @@
 [package]
 name = "soroban-wasmi"
-version = "0.31.0-soroban"
+version = "0.31.0-soroban1"
 description = "Soroban fork of Parity WebAssembly interpreter"
 exclude = ["tests/*", "benches/*"]
 authors.workspace = true
