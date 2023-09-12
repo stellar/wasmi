@@ -6,6 +6,9 @@ on:
       version:
         description: 'Version to bump to'
         required: true
+      base:
+        description: 'Name of branch to open PR against (e.g. soroban-wasmi-v0.31.1)'
+        required: true
 
 jobs:
 
@@ -13,4 +16,4 @@ jobs:
     uses: stellar/actions/.github/workflows/rust-bump-version.yml@main
     with:
       version: ${{ inputs.version }}
-      base: soroban-wasmi-v0.31-soroban
+      base: ${{ inputs.base }}
