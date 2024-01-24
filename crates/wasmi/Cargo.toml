@@ -1,9 +1,9 @@
 [package]
-name = "wasmi"
+name = "soroban-wasmi"
 version.workspace = true
 rust-version.workspace = true
 documentation = "https://docs.rs/wasmi/"
-description = "WebAssembly interpreter"
+description = "Soroban fork of Parity WebAssembly interpreter"
 authors.workspace = true
 repository.workspace = true
 edition.workspace = true
