@@ -16,7 +16,7 @@ publish = false
 wasi-common = "2.0"
 wasi-cap-std-sync = "2.0"
 wiggle = { version = "2.0", default-features = false, features = ["wiggle_metadata"] }
-wasmi = { version = "0.31.1-soroban.20.0.0", path = "../wasmi", package = "soroban-wasmi" }
+wasmi = { version = "0.31.1-soroban.20.0.1", path = "../wasmi", package = "soroban-wasmi" }
 
 [dev-dependencies]
 wat = "1.0.50"
