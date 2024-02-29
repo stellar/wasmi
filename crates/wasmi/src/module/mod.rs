@@ -179,21 +179,45 @@ impl Module {
         }
     }
 
+    /// Returns the number of func types of the [`Module`].
+    pub fn len_types(&self) -> usize {
+        self.func_types.len()
+    }
     /// Returns the number of non-imported functions of the [`Module`].
-    pub(crate) fn len_funcs(&self) -> usize {
+    pub fn len_funcs(&self) -> usize {
         self.funcs.len()
     }
     /// Returns the number of non-imported tables of the [`Module`].
-    pub(crate) fn len_tables(&self) -> usize {
+    pub fn len_tables(&self) -> usize {
         self.tables.len()
     }
+    /// Returns the sum of the minimum sizes of non-imported tables of the [`Module`].
+    pub fn len_table_entries(&self) -> usize {
+        self.tables.iter().map(|t| t.minimum() as usize).sum()
+    }
     /// Returns the number of non-imported linear memories of the [`Module`].
-    pub(crate) fn len_memories(&self) -> usize {
+    pub fn len_memories(&self) -> usize {
         self.memories.len()
     }
     /// Returns the number of non-imported global variables of the [`Module`].
-    pub(crate) fn len_globals(&self) -> usize {
+    pub fn len_globals(&self) -> usize {
         self.globals.len()
+    }
+    /// Returns the number of data segments in the [`Module`].
+    pub fn len_data_segments(&self) -> usize {
+        self.data_segments.len()
+    }
+    /// Returns the number of element segments in the [`Module`].
+    pub fn len_element_segments(&self) -> usize {
+        self.element_segments.len()
+    }
+    /// Returns the number of imports in the [`Module`].
+    pub fn len_imports(&self) -> usize {
+        self.imports.items.len()
+    }
+    /// Returns the number of exports in the [`Module`].
+    pub fn len_exports(&self) -> usize {
+        self.exports.len()
     }
 
     /// Returns a slice to the function types of the [`Module`].
