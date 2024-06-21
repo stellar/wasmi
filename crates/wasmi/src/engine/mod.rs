@@ -23,7 +23,6 @@ use code_map::CompiledFuncRef;
 
 pub(crate) use self::{
     block_type::BlockType,
-    config::FuelCosts,
     executor::Stack,
     func_args::{FuncFinished, FuncParams, FuncResults},
     func_types::DedupFuncType,
@@ -43,7 +42,7 @@ use self::{
 };
 pub use self::{
     code_map::{EngineFunc, EngineFuncSpan, EngineFuncSpanIter},
-    config::{CompilationMode, Config},
+    config::{CompilationMode, Config, FuelCosts},
     executor::ResumableHostError,
     limits::{EnforcedLimits, EnforcedLimitsError, StackLimits},
     resumable::{ResumableCall, ResumableInvocation, TypedResumableCall, TypedResumableInvocation},

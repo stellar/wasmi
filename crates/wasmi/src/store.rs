@@ -214,6 +214,8 @@ impl FuelError {
 pub struct Fuel {
     /// The remaining fuel.
     remaining: u64,
+    /// The total amount of fuel so far.
+    pub(crate) total: u64,
     /// This is `true` if fuel metering is enabled for the [`Engine`].
     enabled: bool,
     /// The fuel costs provided by the [`Engine`]'s [`Config`].
@@ -229,6 +231,7 @@ impl Fuel {
         let costs = *config.fuel_costs();
         Self {
             remaining: 0,
+            total: 0,
             enabled,
             costs,
         }
@@ -261,6 +264,7 @@ impl Fuel {
     pub fn set_fuel(&mut self, fuel: u64) -> Result<(), FuelError> {
         self.check_fuel_metering_enabled()?;
         self.remaining = fuel;
+        self.total = fuel;
         Ok(())
     }
 
@@ -272,6 +276,11 @@ impl Fuel {
     pub fn get_fuel(&self) -> Result<u64, FuelError> {
         self.check_fuel_metering_enabled()?;
         Ok(self.remaining)
+    }
+
+    /// Returns the amount of [`Fuel`] consumed by executions of the [`Store`] so far.
+    pub fn fuel_consumed(&self) -> u64 {
+        self.total.wrapping_sub(self.remaining)
     }
 
     /// Synthetically consumes an amount of [`Fuel`] from the [`Store`].
@@ -939,6 +948,14 @@ impl<T> Store<T> {
     /// If fuel metering is disabled.
     pub fn set_fuel(&mut self, fuel: u64) -> Result<(), Error> {
         self.inner.fuel.set_fuel(fuel).map_err(Into::into)
+    }
+
+    /// Returns the amount of fuel consumed by executions of the [`Store`] so far.
+    ///
+    /// Returns `None` if fuel metering is disabled.
+    pub fn fuel_consumed(&self) -> Option<u64> {
+        self.inner.fuel.check_fuel_metering_enabled().ok()?;
+        Some(self.inner.fuel.fuel_consumed())
     }
 
     /// Allocates a new [`TrampolineEntity`] and returns a [`Trampoline`] reference to it.

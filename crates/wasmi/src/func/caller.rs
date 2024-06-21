@@ -15,7 +15,7 @@ pub struct Caller<'a, T> {
 
 impl<'a, T> Caller<'a, T> {
     /// Creates a new [`Caller`] from the given store context and [`Instance`] handle.
-    pub(crate) fn new<C>(ctx: &'a mut C, instance: Option<&Instance>) -> Self
+    pub fn new<C>(ctx: &'a mut C, instance: Option<&Instance>) -> Self
     where
         C: AsContextMut<Data = T>,
     {
@@ -47,6 +47,13 @@ impl<'a, T> Caller<'a, T> {
     /// Returns a shared reference to the used [`Engine`].
     pub fn engine(&self) -> &Engine {
         self.ctx.store.engine()
+    }
+
+    /// Returns the amount of fuel consumed by executions of the [`Store`](crate::Store) so far.
+    ///
+    /// Returns `None` if fuel metering is disabled.
+    pub fn fuel_consumed(&self) -> Option<u64> {
+        self.ctx.store.fuel_consumed()
     }
 
     /// Returns the remaining fuel of the [`Store`](crate::Store) if fuel metering is enabled.
