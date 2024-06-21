@@ -3,6 +3,7 @@ use super::{
     export::ExternIdx,
     import::FuncTypeIdx,
     ConstExpr,
+    CustomSection,
     DataSegments,
     ElementSegment,
     ExternTypeIdx,
@@ -33,6 +34,7 @@ use std::{boxed::Box, collections::BTreeMap, sync::Arc, vec::Vec};
 pub struct ModuleBuilder {
     pub header: ModuleHeader,
     pub data_segments: DataSegmentsBuilder,
+    pub custom_sections: Vec<CustomSection>,
 }
 
 /// A builder for a WebAssembly [`Module`] header.
@@ -51,6 +53,7 @@ pub struct ModuleHeaderBuilder {
     pub compiled_funcs: Vec<CompiledFunc>,
     pub compiled_funcs_idx: BTreeMap<CompiledFunc, FuncIdx>,
     pub element_segments: Box<[ElementSegment]>,
+    pub custom_sections: Vec<CustomSection>,
 }
 
 impl ModuleHeaderBuilder {
@@ -70,6 +73,7 @@ impl ModuleHeaderBuilder {
             compiled_funcs: Vec::new(),
             compiled_funcs_idx: BTreeMap::new(),
             element_segments: Box::from([]),
+            custom_sections: Vec::new(),
         }
     }
 
@@ -90,6 +94,7 @@ impl ModuleHeaderBuilder {
                 compiled_funcs: self.compiled_funcs.into(),
                 compiled_funcs_idx: self.compiled_funcs_idx,
                 element_segments: self.element_segments,
+                custom_sections: self.custom_sections.into(),
             }),
         }
     }
@@ -132,10 +137,11 @@ impl ModuleImportsBuilder {
 
 impl ModuleBuilder {
     /// Creates a new [`ModuleBuilder`] for the given [`Engine`].
-    pub fn new(header: ModuleHeader) -> Self {
+    pub fn new(header: ModuleHeader, custom_sections: Vec<CustomSection>) -> Self {
         Self {
             header,
             data_segments: DataSegments::build(),
+            custom_sections,
         }
     }
 }
@@ -419,6 +425,17 @@ impl ModuleBuilder {
             engine: engine.clone(),
             header: self.header,
             data_segments: self.data_segments.finish(),
+            custom_sections: self.custom_sections.into(),
         }
     }
+}
+
+pub(crate) fn process_custom_section(
+    section: wasmparser::CustomSectionReader,
+    custom_sections: &mut Vec<CustomSection>,
+) -> Result<(), Error> {
+    let name: Box<str> = section.name().into();
+    let data: Box<[u8]> = section.data().into();
+    custom_sections.push(CustomSection { name, data });
+    Ok(())
 }

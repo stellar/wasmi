@@ -51,12 +51,19 @@ pub struct Module {
     engine: Engine,
     header: ModuleHeader,
     data_segments: DataSegments,
+    custom_sections: Box<[CustomSection]>,
 }
 
 /// A parsed and validated WebAssembly module header.
 #[derive(Debug, Clone)]
 pub struct ModuleHeader {
     inner: Arc<ModuleHeaderInner>,
+}
+
+#[derive(Debug)]
+pub struct CustomSection {
+    pub name: Box<str>,
+    pub data: Box<[u8]>,
 }
 
 #[derive(Debug)]
@@ -74,6 +81,7 @@ struct ModuleHeaderInner {
     compiled_funcs: Box<[CompiledFunc]>,
     compiled_funcs_idx: BTreeMap<CompiledFunc, FuncIdx>,
     element_segments: Box<[ElementSegment]>,
+    custom_sections: Box<[CustomSection]>,
 }
 
 impl ModuleHeader {
@@ -405,6 +413,14 @@ impl Module {
     /// Returns an iterator over the exports of the [`Module`].
     pub fn exports(&self) -> ModuleExportsIter {
         ModuleExportsIter::new(self)
+    }
+
+    pub fn custom_sections(&self) -> impl Iterator<Item = &CustomSection> {
+        self.header
+            .inner
+            .custom_sections
+            .iter()
+            .chain(self.custom_sections.iter())
     }
 
     /// Looks up an export in this [`Module`] by its `name`.

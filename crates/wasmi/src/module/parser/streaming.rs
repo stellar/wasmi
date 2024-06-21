@@ -1,5 +1,5 @@
 use super::{ModuleBuilder, ModuleHeader, ModuleHeaderBuilder, ModuleParser};
-use crate::{Error, Module, Read};
+use crate::{module::builder::process_custom_section, Error, Module, Read};
 use core::ops::{Deref, DerefMut};
 use std::vec::Vec;
 use wasmparser::{Chunk, Payload, Validator};
@@ -177,7 +177,9 @@ impl ModuleParser {
                         }
                         Payload::DataSection(_) => break,
                         Payload::End(_) => break,
-                        Payload::CustomSection { .. } => Ok(()),
+                        Payload::CustomSection(section) => {
+                            process_custom_section(section, &mut header.custom_sections)
+                        }
                         unexpected => self.process_invalid_payload(unexpected),
                     }?;
                     // Cut away the parts from the intermediate buffer that have already been parsed.
@@ -203,6 +205,7 @@ impl ModuleParser {
         buffer: &mut ParseBuffer,
         header: ModuleHeader,
     ) -> Result<ModuleBuilder, Error> {
+        let mut custom_sections = Vec::new();
         loop {
             match self.parser.parse(&buffer[..], self.eof)? {
                 Chunk::NeedMoreData(hint) => {
@@ -220,6 +223,9 @@ impl ModuleParser {
                             let bytes = &buffer[start..consumed];
                             self.process_code_entry(func_body, bytes, &header)?;
                         }
+                        Payload::CustomSection(section) => {
+                            process_custom_section(section, &mut custom_sections)?
+                        }
                         _ => break,
                     }
                     // Cut away the parts from the intermediate buffer that have already been parsed.
@@ -227,7 +233,7 @@ impl ModuleParser {
                 }
             }
         }
-        Ok(ModuleBuilder::new(header))
+        Ok(ModuleBuilder::new(header, custom_sections))
     }
 
     /// Parse the Wasm data section and finalize parsing.
@@ -260,7 +266,9 @@ impl ModuleParser {
                             ParseBuffer::consume(buffer, consumed);
                             break;
                         }
-                        Payload::CustomSection { .. } => {}
+                        Payload::CustomSection(section) => {
+                            process_custom_section(section, &mut builder.custom_sections)?
+                        }
                         invalid => self.process_invalid_payload(invalid)?,
                     }
                     // Cut away the parts from the intermediate buffer that have already been parsed.

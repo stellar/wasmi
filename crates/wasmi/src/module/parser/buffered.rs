@@ -1,5 +1,5 @@
 use super::{ModuleBuilder, ModuleHeader, ModuleHeaderBuilder, ModuleParser};
-use crate::{Error, Module};
+use crate::{module::builder::process_custom_section, Error, Module};
 use wasmparser::{Chunk, Payload, Validator};
 
 impl ModuleParser {
@@ -118,7 +118,9 @@ impl ModuleParser {
                 }
                 Payload::DataSection(_) => break,
                 Payload::End(_) => break,
-                Payload::CustomSection { .. } => Ok(()),
+                Payload::CustomSection(section) => {
+                    process_custom_section(section, &mut header.custom_sections)
+                }
                 unexpected => self.process_invalid_payload(unexpected),
             }?;
             Self::consume_buffer(consumed, buffer);
@@ -140,6 +142,7 @@ impl ModuleParser {
         buffer: &mut &[u8],
         header: ModuleHeader,
     ) -> Result<ModuleBuilder, Error> {
+        let mut custom_sections: std::vec::Vec<crate::module::CustomSection> = std::vec::Vec::new();
         loop {
             let (consumed, payload) = self.next_payload(buffer)?;
             match payload {
@@ -154,10 +157,13 @@ impl ModuleParser {
                     let bytes = &bytes[start..];
                     self.process_code_entry(func_body, bytes, &header)?;
                 }
+                Payload::CustomSection(section) => {
+                    process_custom_section(section, &mut custom_sections)?
+                }
                 _ => break,
             }
         }
-        Ok(ModuleBuilder::new(header))
+        Ok(ModuleBuilder::new(header, custom_sections))
     }
 
     /// Parse the Wasm data section and finalize parsing.
@@ -184,7 +190,9 @@ impl ModuleParser {
                     self.process_end(offset)?;
                     break;
                 }
-                Payload::CustomSection { .. } => {}
+                Payload::CustomSection(section) => {
+                    process_custom_section(section, &mut builder.custom_sections)?
+                }
                 invalid => self.process_invalid_payload(invalid)?,
             }
             Self::consume_buffer(consumed, buffer);

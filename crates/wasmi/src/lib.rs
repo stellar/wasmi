@@ -132,6 +132,7 @@ pub use self::{
         EnforcedLimits,
         Engine,
         EngineWeak,
+        FuelCosts,
         ResumableCall,
         ResumableInvocation,
         StackLimits,

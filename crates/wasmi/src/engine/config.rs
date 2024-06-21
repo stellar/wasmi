@@ -387,6 +387,11 @@ impl Config {
         &self.limits
     }
 
+    pub fn set_fuel_costs(&mut self, costs: FuelCosts) -> &mut Self {
+        self.fuel_costs = costs;
+        self
+    }
+
     /// Returns the [`WasmFeatures`] represented by the [`Config`].
     pub(crate) fn wasm_features(&self) -> WasmFeatures {
         WasmFeatures {
