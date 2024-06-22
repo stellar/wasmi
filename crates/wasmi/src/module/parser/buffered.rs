@@ -145,13 +145,13 @@ impl ModuleParser {
         let mut custom_sections: std::vec::Vec<crate::module::CustomSection> = std::vec::Vec::new();
         loop {
             let (consumed, payload) = self.next_payload(buffer)?;
+            let bytes = Self::consume_buffer(consumed, buffer);
             match payload {
                 Payload::CodeSectionEntry(func_body) => {
                     // Note: Unfortunately the `wasmparser` crate is missing an API
                     //       to return the byte slice for the respective code section
                     //       entry payload. Please remove this work around as soon as
                     //       such an API becomes available.
-                    let bytes = Self::consume_buffer(consumed, buffer);
                     let remaining = func_body.get_binary_reader().bytes_remaining();
                     let start = consumed - remaining;
                     let bytes = &bytes[start..];
