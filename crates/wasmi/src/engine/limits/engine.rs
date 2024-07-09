@@ -81,7 +81,7 @@ pub struct EnforcedLimits {
     ///
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_globals: Option<u32>,
+    pub max_globals: Option<u32>,
     /// Number of functions a single Wasm module can have at most.
     ///
     /// # Note
@@ -91,7 +91,7 @@ pub struct EnforcedLimits {
     ///
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_functions: Option<u32>,
+    pub max_functions: Option<u32>,
     /// Number of tables a single Wasm module can have at most.
     ///
     /// # Note
@@ -102,7 +102,7 @@ pub struct EnforcedLimits {
     ///
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_tables: Option<u32>,
+    pub max_tables: Option<u32>,
     /// Number of table element segments a single Wasm module can have at most.
     ///
     /// # Note
@@ -113,7 +113,7 @@ pub struct EnforcedLimits {
     ///
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_element_segments: Option<u32>,
+    pub max_element_segments: Option<u32>,
     /// Number of linear memories a single Wasm module can have.
     ///
     /// # Note
@@ -125,7 +125,7 @@ pub struct EnforcedLimits {
     ///
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_memories: Option<u32>,
+    pub max_memories: Option<u32>,
     /// Number of linear memory data segments a single Wasm module can have at most.
     ///
     /// # Note
@@ -136,7 +136,7 @@ pub struct EnforcedLimits {
     ///
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_data_segments: Option<u32>,
+    pub max_data_segments: Option<u32>,
     /// Limits the number of parameter of all functions and control structures.
     ///
     /// # Note
@@ -147,7 +147,7 @@ pub struct EnforcedLimits {
     /// [`Engine`]: crate::Engine
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_params: Option<usize>,
+    pub max_params: Option<usize>,
     /// Limits the number of results of all functions and control structures.
     ///
     /// # Note
@@ -159,7 +159,7 @@ pub struct EnforcedLimits {
     /// [`Engine`]: crate::Engine
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) max_results: Option<usize>,
+    pub max_results: Option<usize>,
     /// Minimum number of bytes a function must have on average.
     ///
     /// # Note
@@ -171,7 +171,7 @@ pub struct EnforcedLimits {
     ///
     /// [`Module::new`]: crate::Module::new
     /// [`Module::new_unchecked`]: crate::Module::new_unchecked
-    pub(crate) min_avg_bytes_per_function: Option<AvgBytesPerFunctionLimit>,
+    pub min_avg_bytes_per_function: Option<AvgBytesPerFunctionLimit>,
 }
 
 /// The limit for average bytes per function limit and the threshold at which it is enforced.
