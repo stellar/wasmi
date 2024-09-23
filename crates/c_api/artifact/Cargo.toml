@@ -1,6 +1,6 @@
 [package]
 name = "wasmi_c_api"
-version.workspace = true
+version = "0.36.1"
 rust-version.workspace = true
 documentation = "https://docs.rs/wasmi_c_api_impl"
 description = "C bindings for the Wasmi WebAssembly interpreter"

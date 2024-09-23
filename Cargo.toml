@@ -26,11 +26,11 @@ exclude = ["tests"]
 
 [workspace.dependencies]
 wasmi = { version = "0.36.1-soroban.22.0.0", path = "crates/wasmi", default-features = false, package = "soroban-wasmi" }
-wasmi_wasi = { version = "0.36.1-soroban.22.0.0", path = "crates/wasi", default-features = false }
-wasmi_core = { version = "0.36.1-soroban.22.0.0", path = "crates/core", default-features = false }
-wasmi_collections = { version = "0.36.1-soroban.22.0.0", path = "crates/collections", default-features = false }
-wasmi_c_api_impl = { version = "0.36.1-soroban.22.0.0", path = "crates/c_api" }
-wasmi_c_api_macros = { version = "0.36.1-soroban.22.0.0", path = "crates/c_api/macro" }
+wasmi_wasi = { version = "0.36.1", path = "crates/wasi", default-features = false }
+wasmi_core = { version = "0.36.1", path = "crates/core", default-features = false }
+wasmi_collections = { version = "0.36.1", path = "crates/collections", default-features = false }
+wasmi_c_api_impl = { version = "0.36.1", path = "crates/c_api" }
+wasmi_c_api_macros = { version = "0.36.1", path = "crates/c_api/macro" }
 num-traits = { version = "0.2.8", default-features = false }
 
 [profile.bench]
