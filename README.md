@@ -23,3 +23,18 @@ license and the APACHE license (Version 2.0), at your choice.
 
 See `LICENSE-APACHE` and `LICENSE-MIT` for details.
 
+> [!IMPORTANT]
+> ## ⚠️  Stellar-maintained fork—for use by [soroban](https://github.com/stellar/rs-soroban-env) only
+>
+> This repository is a fork maintained by the Stellar Development Foundation
+> solely for use as a dependency of soroban. It is not a general-purpose
+> distribution and is not supported for any other use.
+>
+> **Security researchers:** only the portions of this code that are compiled
+> into production builds of soroban, in stellar-core, in the configuration
+> stellar-core is built and deployed with, are in scope for the [Stellar bug
+> bounty program](https://hackerone.com/stellar). Vulnerabilities in unused
+> components, non-default build configurations, patterns of use different from
+> those of soroban or stellar-core, or tooling that stellar-core does not ship
+> are out of scope. Issues affecting the upstream project should be reported
+> upstream.
