@@ -3,58 +3,34 @@ use super::{
     export::ExternIdx,
     global::Global,
     import::{FuncTypeIdx, Import},
-    DataSegment,
-    ElementSegment,
-    FuncIdx,
-    Module,
-    ModuleBuilder,
-    ModuleError,
-    ModuleResources,
-    Read,
+    DataSegment, ElementSegment, FuncIdx, Module, ModuleBuilder, ModuleError, ModuleResources,
 };
 use crate::{
     engine::{CompiledFunc, FuncTranslatorAllocations},
-    Engine,
-    FuncType,
-    MemoryType,
-    TableType,
+    Engine, FuncType, MemoryType, TableType,
 };
-use alloc::{boxed::Box, vec::Vec};
+use alloc::boxed::Box;
 use core::{
     mem::{replace, take},
     ops::Range,
 };
 use wasmparser::{
-    Chunk,
-    CustomSectionReader,
-    DataSectionReader,
-    ElementSectionReader,
-    Encoding,
-    ExportSectionReader,
-    FuncValidatorAllocations,
-    FunctionBody,
-    FunctionSectionReader,
-    GlobalSectionReader,
-    ImportSectionReader,
-    MemorySectionReader,
-    Parser as WasmParser,
-    Payload,
-    TableSectionReader,
-    TypeSectionReader,
-    Validator,
-    WasmFeatures,
+    Chunk, CustomSectionReader, DataSectionReader, ElementSectionReader, Encoding,
+    ExportSectionReader, FuncValidatorAllocations, FunctionBody, FunctionSectionReader,
+    GlobalSectionReader, ImportSectionReader, MemorySectionReader, Parser as WasmParser, Payload,
+    TableSectionReader, TypeSectionReader, Validator, WasmFeatures,
 };
 
-/// Parses and validates the given Wasm bytecode stream.
+/// Parses and validates the given Wasm bytecode buffer.
 ///
 /// Returns the compiled and validated Wasm [`Module`] upon success.
 /// Uses the given [`Engine`] as the translation target of the process.
 ///
 /// # Errors
 ///
-/// If the Wasm bytecode stream fails to validate.
-pub fn parse(engine: &Engine, stream: impl Read) -> Result<Module, ModuleError> {
-    ModuleParser::new(engine).parse(stream)
+/// If the Wasm bytecode buffer fails to validate.
+pub fn parse(engine: &Engine, buffer: &[u8]) -> Result<Module, ModuleError> {
+    ModuleParser::new(engine).parse(buffer)
 }
 
 /// Context used to construct a WebAssembly module from a stream of bytes.
@@ -98,28 +74,33 @@ impl<'engine> ModuleParser<'engine> {
         engine.config().wasm_features()
     }
 
-    /// Starts parsing and validating the Wasm bytecode stream.
+    /// Starts parsing and validating a Wasm bytecode buffer that is already
+    /// entirely resident in memory.
     ///
     /// Returns the compiled and validated Wasm [`Module`] upon success.
     ///
     /// # Errors
     ///
-    /// If the Wasm bytecode stream fails to validate.
-    pub fn parse(mut self, mut stream: impl Read) -> Result<Module, ModuleError> {
-        let mut buffer = Vec::new();
-        let mut eof = false;
-        'outer: loop {
-            match self.parser.parse(&buffer[..], eof)? {
-                Chunk::NeedMoreData(hint) => {
-                    eof = Self::pull_bytes(&mut buffer, hint, &mut stream)?;
-                    continue 'outer;
+    /// If the Wasm bytecode buffer fails to validate.
+    pub fn parse(mut self, buffer: &[u8]) -> Result<Module, ModuleError> {
+        let mut buffer = buffer;
+        loop {
+            // always pass `eof = true`,  telling `wasmparser` no more input
+            // would arrive (we have the whole buffer in memory)
+            match self.parser.parse(buffer, true)? {
+                Chunk::NeedMoreData(_) => {
+                    // this is `unreachable!()`, because `NeedMoreData` asks the
+                    // caller to supply more bytes, which `wasmparser` only does
+                    // when `eof` is `false`.
+                    return Err(ModuleError::Malformed("unexpected end of Wasm binary"));
                 }
                 Chunk::Parsed { consumed, payload } => {
-                    eof = self.process_payload(payload)?;
-                    // Cut away the parts from the intermediate buffer that have already been parsed.
-                    buffer.drain(..consumed);
+                    let eof = self.process_payload(payload)?;
+                    // Advance past the bytes that have already been parsed
+                    // (this is a pointer bump not copy).
+                    buffer = &buffer[consumed..];
                     if eof {
-                        break 'outer;
+                        break;
                     }
                 }
             }
@@ -127,29 +108,17 @@ impl<'engine> ModuleParser<'engine> {
         Ok(self.builder.finish())
     }
 
-    /// Pulls more bytes from the `stream` in order to produce Wasm payload.
-    ///
-    /// Returns `true` if the parser reached the end of the stream.
-    ///
-    /// # Note
-    ///
-    /// Uses `hint` to efficiently preallocate enough space for the next payload.
-    fn pull_bytes(
-        buffer: &mut Vec<u8>,
-        hint: u64,
-        stream: &mut impl Read,
-    ) -> Result<bool, ModuleError> {
-        // Use the hint to preallocate more space, then read
-        // some more data into the buffer.
-        //
-        // Note that the buffer management here is not ideal,
-        // but it's compact enough to fit in an example!
-        let len = buffer.len();
-        buffer.extend((0..hint).map(|_| 0u8));
-        let read_bytes = stream.read(&mut buffer[len..])?;
-        buffer.truncate(len + read_bytes);
-        let reached_end = read_bytes == 0;
-        Ok(reached_end)
+    /// Rejects a section whose declared entry count cannot possibly be backed
+    /// by the bytes the section occupies. Every entry of every section occupies
+    /// at least one byte, so a count exceeding the length of the section body
+    /// is malformed
+    fn check_declared_count(count: u32, range: &Range<usize>) -> Result<(), ModuleError> {
+        if count as usize > range.len() {
+            return Err(ModuleError::Malformed(
+                "section declares more entries than it has bytes",
+            ));
+        }
+        Ok(())
     }
 
     /// Processes the `wasmparser` payload.
@@ -249,6 +218,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If an unsupported function type is encountered.
     fn process_types(&mut self, section: TypeSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.type_section(&section)?;
         let func_types = section.into_iter().map(|result| match result? {
             wasmparser::Type::Func(ty) => Ok(FuncType::from_wasmparser(ty)),
@@ -268,6 +238,7 @@ impl<'engine> ModuleParser<'engine> {
     /// - If an import fails to validate.
     /// - If an unsupported import declaration is encountered.
     fn process_imports(&mut self, section: ImportSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.import_section(&section)?;
         let imports = section
             .into_iter()
@@ -301,6 +272,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If a function declaration fails to validate.
     fn process_functions(&mut self, section: FunctionSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.function_section(&section)?;
         let funcs = section
             .into_iter()
@@ -319,6 +291,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If a table declaration fails to validate.
     fn process_tables(&mut self, section: TableSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.table_section(&section)?;
         let tables = section.into_iter().map(|table| {
             table
@@ -339,6 +312,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If a linear memory declaration fails to validate.
     fn process_memories(&mut self, section: MemorySectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.memory_section(&section)?;
         let memories = section.into_iter().map(|memory| {
             memory
@@ -369,6 +343,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If a global variable declaration fails to validate.
     fn process_globals(&mut self, section: GlobalSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.global_section(&section)?;
         let globals = section
             .into_iter()
@@ -387,6 +362,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If an export declaration fails to validate.
     fn process_exports(&mut self, section: ExportSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.export_section(&section)?;
         let exports = section.into_iter().map(|export| {
             let export = export?;
@@ -423,6 +399,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If any of the table element segments fail to validate.
     fn process_element(&mut self, section: ElementSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.element_section(&section)?;
         let segments = section
             .into_iter()
@@ -453,6 +430,7 @@ impl<'engine> ModuleParser<'engine> {
     ///
     /// If any of the table elements fail to validate.
     fn process_data(&mut self, section: DataSectionReader) -> Result<(), ModuleError> {
+        Self::check_declared_count(section.count(), &section.range())?;
         self.validator.data_section(&section)?;
         let segments = section
             .into_iter()
