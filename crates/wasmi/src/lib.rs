@@ -159,7 +159,6 @@ pub use self::{
         Module,
         ModuleExportsIter,
         ModuleImportsIter,
-        Read,
     },
     store::{AsContext, AsContextMut, Store, StoreContext, StoreContextMut},
     table::{Table, TableType},

@@ -9,7 +9,6 @@ mod import;
 mod init_expr;
 mod instantiate;
 mod parser;
-mod read;
 mod utils;
 
 use self::{
@@ -18,7 +17,6 @@ use self::{
     global::Global,
     import::{ExternTypeIdx, Import},
     parser::parse,
-    read::ReadError,
 };
 pub use self::{
     builder::ModuleResources,
@@ -29,7 +27,6 @@ pub use self::{
     import::{FuncTypeIdx, ImportName},
     instantiate::{InstancePre, InstantiationError},
     parser::ReusableAllocations,
-    read::Read,
 };
 pub(crate) use self::{
     data::{DataSegment, DataSegmentKind},
@@ -38,13 +35,7 @@ pub(crate) use self::{
 };
 use crate::{
     engine::{CompiledFunc, DedupFuncType},
-    Engine,
-    Error,
-    ExternType,
-    FuncType,
-    GlobalType,
-    MemoryType,
-    TableType,
+    Engine, Error, ExternType, FuncType, GlobalType, MemoryType, TableType,
 };
 use alloc::{boxed::Box, collections::BTreeMap, sync::Arc};
 use core::{iter, slice::Iter as SliceIter};
@@ -144,14 +135,14 @@ impl ModuleImports {
 }
 
 impl Module {
-    /// Creates a new Wasm [`Module`] from the given byte stream.
+    /// Creates a new Wasm [`Module`] from the given byte buffer.
     ///
     /// # Errors
     ///
-    /// - If the `stream` cannot be decoded into a valid Wasm module.
+    /// - If the `buffer` cannot be decoded into a valid Wasm module.
     /// - If unsupported Wasm proposals are encountered.
-    pub fn new(engine: &Engine, stream: impl Read) -> Result<Self, Error> {
-        parse(engine, stream).map_err(Into::into)
+    pub fn new(engine: &Engine, buffer: impl AsRef<[u8]>) -> Result<Self, Error> {
+        parse(engine, buffer.as_ref()).map_err(Into::into)
     }
 
     /// Returns the [`Engine`] used during creation of the [`Module`].
